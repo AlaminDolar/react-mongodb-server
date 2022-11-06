@@ -1,6 +1,8 @@
 const express = require("express");
 const cors = require("cors");
+
 const { MongoClient, ServerApiVersion } = require("mongodb");
+const ObjecId = require("mongodb").ObjectId;
 const res = require("express/lib/response");
 const app = express();
 
@@ -31,6 +33,45 @@ async function run() {
       const newUser = req.body;
       console.log("adding new user", newUser);
       const result = await userCollection.insertOne(newUser);
+      res.send(result);
+    });
+
+    // get user
+    app.get("/user", async (req, res) => {
+      const query = {};
+      const cursor = userCollection.find(query);
+      const users = await cursor.toArray();
+      res.send(users);
+    });
+
+    // Delete
+    app.delete("/user/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjecId(id) };
+      const result = await userCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    app.get("/user/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjecId(id) };
+      const result = await userCollection.findOne(query);
+      res.send(result);
+    });
+
+    // update
+    app.put("/user/:id", async (req, res) => {
+      const id = req.params.id;
+      const UpdateUser = req.body;
+      const filter = { _id: ObjecId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          name: UpdateUser.name,
+          email: UpdateUser.email,
+        },
+      };
+      const result = await userCollection.updateOne(filter, updateDoc, options);
       res.send(result);
     });
 
